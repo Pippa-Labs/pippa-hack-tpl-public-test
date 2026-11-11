@@ -1,0 +1,148 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Your app's manifest. This file IS the app's contract.
+#
+# Everything Pippa shows a user about your app is generated from this file, and
+# the runtime refuses anything you did not declare here. If `outcomes` does not
+# list it, your app cannot be asked to do it. If `output` does not name a
+# field, returning that field is an error, not a bonus.
+#
+# That strictness is the point. A user installing your app sees a permission
+# screen built from this file, so the file has to be the truth.
+#
+# Replace everything below with your own app. The example describes a small
+# "days until" app so you can see the shape of each part.
+# ─────────────────────────────────────────────────────────────────────────────
+
+manifest_version: 1
+
+# Your app keeps nothing between calls. This is not a preference you can
+# change — every hackathon app runs with `persistence: none`, and the runtime
+# throws away the machine your code ran on when it finishes.
+persistence: none
+
+# ── Who this app belongs to ──────────────────────────────────────────────────
+#
+# A PLACEHOLDER. Replace it with the email address you sign in to Pippa with —
+# the address your Pippa invitation was sent to.
+#
+# It matters because a published app is PRIVATE until a reviewer approves it,
+# and this line is the only thing in the whole system that says whose it is.
+# Nothing else does: the publishing pipeline knows which repository pushed, and
+# a repository is not a person.
+#
+# So if it is missing, or misspelt, or somebody else's address, the app
+# publishes perfectly happily and is then invisible to everyone — you
+# included. You cannot install it, cannot test it and cannot submit it for
+# review, and nothing reports an error anywhere, because from the platform's
+# point of view nothing went wrong. `scripts/check.py` warns about it for
+# exactly that reason.
+#
+# Pippa does not show this address to users; `publisher` below is the name
+# they see. This file is in your repository, though: in a public repository
+# anyone can read the address, and it stays in the git history even if you
+# change it later. Know that before you push it.
+#
+# docs/REVIEW_AND_SHARING.md is the whole story.
+owner_email: you@example.com
+
+app:
+  # A PLACEHOLDER. Replace it before anything else, or the build will refuse
+  # to publish.
+  #
+  # It must be `hack.` + this repository's name with `pippa-hack-` removed and
+  # every hyphen turned into an underscore:
+  #
+  #     Pippa-Labs/pippa-hack-tide-times  ->  hack.tide_times
+  #
+  # Hyphens are not valid in an app id anywhere. `git remote get-url origin`
+  # tells you the repository name.
+  id: hack.your_app_name_here
+  name: Days Until
+  version: 0.1.0
+  publisher: Your name
+  # One or two sentences, written for someone deciding whether to install it.
+  # Say what it does and what it sends anywhere. Never use the word "by" — the
+  # badge Pippa shows is parsed from "[via <name> <version> by <publisher>]"
+  # and splits on the first "by".
+  summary: >-
+    Works out how many days there are until a date you name, and says which
+    day of the week it falls on.
+
+# Who can install it. `personal` means a person's own Pippa.
+agent_types:
+  - personal
+
+# ── Outcomes: the things your app can be asked to do ─────────────────────────
+#
+# An outcome is one job. Pippa picks between your outcomes — and between your
+# app and every other app — by comparing the user's message against `summary`
+# and `example_phrases`. So those two fields are not documentation; they are
+# the behaviour that decides whether your app is used at all.
+#
+# Writing example phrases well:
+#   * Write how a PERSON would ask, not how you would name a function.
+#   * Use carrier words ("how long until"), not one specific subject —
+#     the subject changes every time and only dilutes the match.
+#   * Give each outcome its own words. Two outcomes sharing vocabulary tie,
+#     and a tie is resolved by a model guessing.
+#   * Avoid words another app owns. "today", "tomorrow", "this week" and
+#     "my calendar" belong to Pippa Diary; a phrase using them will lose.
+
+outcomes:
+  - id: days.until
+    summary: Count the days between now and a date, and name the weekday
+    example_phrases:
+      - how many days until
+      - how long until
+      - how many sleeps until
+      - days left until
+      - what day of the week is
+    # What Pippa extracts from the user's message and hands you. A model reads
+    # `description` to do that extraction, so write it as an instruction to
+    # whoever is filling the field in.
+    inputs:
+      # `required: false`, although the app is useless without a date, and
+      # that is deliberate. A missing REQUIRED input is refused inside the
+      # runtime before your code runs, and the user is shown a message that
+      # blames your app for a question they asked perfectly reasonably. An
+      # optional input simply arrives absent, your code notices, and you
+      # raise an error that says something true. Keep `required: true` for
+      # inputs the extractor can always supply.
+      - name: date
+        type: string
+        required: false
+        description: >-
+          The target date, as the user wrote it — for example "25 December",
+          "2027-01-01" or "next Friday". If the message does not name a date,
+          return an empty string rather than guessing.
+      - name: timezone
+        type: timezone
+        required: false
+        description: The user's time zone, so "today" means their today.
+    # What you promise to return. Returning anything else is refused; omitting
+    # a declared field is refused too. Keep it small and specific.
+    output:
+      - name: days
+        type: integer
+        description: How many whole days until the date. Negative if it has passed.
+      - name: target_date
+        type: string
+        description: The date you actually used, as YYYY-MM-DD.
+      - name: weekday
+        type: string
+        description: The day of the week the date falls on.
+      - name: already_passed
+        type: boolean
+
+# ── Things this example does NOT use ─────────────────────────────────────────
+#
+# `connectors:` and `secrets:` declare that your app needs somebody's
+# credentials — a Google account, for instance. Hackathon apps may not use
+# them: registration refuses any app that asks, because granting a stranger's
+# app a real user's credential is not something a workshop can consent to on
+# a user's behalf.
+#
+# Your app CAN still call the public internet (see docs/HOW_PIPPA_APPS_WORK.md),
+# including an API whose key you put in your own code. Just remember your code
+# is readable by anyone who can see your repository, so use a free or throwaway
+# key and never a personal one.

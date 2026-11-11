@@ -1,0 +1,13 @@
+# What the build installs from PyPI before it checks your app.
+#
+# The Pippa SDK is not listed here and is not in this repository. The build
+# installs it before anything else, at the exact version your app runs against
+# in production. Do not add it, a package index or a wheel file: the build
+# refuses all three.
+
+# Your app's manifest is YAML, so reading it needs this. It is also available
+# where your app runs.
+PyYAML>=6.0
+
+# Tests. Not shipped with your app.
+pytest>=8.0

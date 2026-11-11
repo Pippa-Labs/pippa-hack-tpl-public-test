@@ -1,0 +1,15 @@
+name: Publish to Pippa
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  statuses: write
+
+jobs:
+  publish:
+    uses: Pippa-Labs/pippa-builders-pipeline/.github/workflows/reusable-hack-publish.yml@main

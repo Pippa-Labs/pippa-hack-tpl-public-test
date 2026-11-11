@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build an App for Pippa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #f1f5f4; --surface: #ffffff; --sunken: #e6edeb;
+    --ink: #0d1e1b; --soft: #4d6763; --line: #d3e0dc;
+    --accent: #0c7a68; --accent-soft: #d9efea;
+    --hot: #c4551f; --hot-soft: #fbeade;
+    --shadow: 0 1px 2px rgba(13,30,27,.05), 0 10px 28px -14px rgba(13,30,27,.22);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a1412; --surface: #111f1c; --sunken: #0d1917;
+      --ink: #e4efec; --soft: #8fa9a4; --line: #1e332f;
+      --accent: #45d6bb; --accent-soft: #10302a;
+      --hot: #ff9560; --hot-soft: #331c11;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.75);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a1412; --surface: #111f1c; --sunken: #0d1917;
+    --ink: #e4efec; --soft: #8fa9a4; --line: #1e332f;
+    --accent: #45d6bb; --accent-soft: #10302a;
+    --hot: #ff9560; --hot-soft: #331c11;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.75);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 400 17px/1.66 "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 0 16px 90px; }
+  p, li { max-width: 64ch; }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+  header { padding: 76px 0 40px; }
+  .kicker {
+    font: 600 .74rem/1 "JetBrains Mono", monospace; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 20px;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 700;
+    font-size: clamp(2.4rem, 7.5vw, 4.1rem); line-height: .98;
+    letter-spacing: -.02em; margin: 0 0 20px; text-wrap: balance;
+  }
+  .standfirst { font-size: 1.22rem; line-height: 1.5; color: var(--soft); max-width: 38ch; margin: 0 0 1rem; }
+  .nocode {
+    display: inline-block; margin-top: 10px; padding: 10px 16px;
+    background: var(--accent-soft); border-radius: 10px;
+    font-size: 1rem; font-weight: 600; color: var(--accent);
+  }
+
+  h2 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 700; font-size: 1.85rem;
+    letter-spacing: -.012em; margin: 56px 0 14px; text-wrap: balance;
+  }
+  h3 { font-weight: 600; font-size: 1.02rem; margin: 28px 0 7px; }
+  code {
+    font: 400 .87em/1.4 "JetBrains Mono", ui-monospace, monospace;
+    background: var(--sunken); border: 1px solid var(--line);
+    border-radius: 4px; padding: .1em .36em;
+  }
+  pre {
+    background: var(--sunken); border: 1px solid var(--line); border-radius: 10px;
+    padding: 15px 17px; overflow-x: auto;
+    font: 400 .845rem/1.65 "JetBrains Mono", ui-monospace, monospace; margin: 0 0 1rem;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: 1em; }
+
+  .steps { margin: 36px 0 0; padding: 0; list-style: none; }
+  .step { position: relative; padding: 0 0 34px 62px; border-left: 2px solid var(--line); margin-left: 17px; }
+  .step:last-child { border-left-color: transparent; padding-bottom: 8px; }
+  .step::before {
+    content: attr(data-n); position: absolute; left: -19px; top: -4px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font: 600 .95rem/36px "JetBrains Mono", monospace; text-align: center;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .step::before { color: #06201b; }
+  }
+  :root[data-theme="dark"] .step::before { color: #06201b; }
+  .step h2 { font-size: 1.42rem; margin: -2px 0 10px; }
+  .step .when {
+    font: 600 .72rem/1 "JetBrains Mono", monospace; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--soft); margin-bottom: 8px; display: block;
+  }
+  @media (max-width: 560px) {
+    .step { padding-left: 46px; margin-left: 15px; }
+    .step::before { left: -17px; width: 32px; height: 32px; line-height: 32px; font-size: .85rem; }
+  }
+
+  .box {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+    padding: 16px 20px; margin: 20px 0; box-shadow: var(--shadow);
+  }
+  .box.hot { border-left-color: var(--hot); background: var(--hot-soft); }
+  .box p:last-child { margin-bottom: 0; }
+  .box .tag {
+    display: block; font: 600 .7rem/1 "JetBrains Mono", monospace;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+  }
+  .box.hot .tag { color: var(--hot); }
+
+  .ask {
+    background: var(--accent-soft); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px 22px; margin: 18px 0; font-size: 1.04rem;
+  }
+  .ask .who {
+    display: block; font: 600 .7rem/1 "JetBrains Mono", monospace;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+  }
+  .ask em { font-style: normal; }
+  .ask .lnk { font-family: "JetBrains Mono", monospace; font-size: .86rem; word-break: break-all; }
+
+  .need { list-style: none; padding: 0; margin: 18px 0; }
+  .need li { padding: 12px 0 12px 28px; border-bottom: 1px solid var(--line); position: relative; max-width: none; }
+  .need li:last-child { border-bottom: 0; }
+  .need li::before {
+    content: "\2713"; position: absolute; left: 4px; top: 12px;
+    color: var(--accent); font-weight: 700;
+  }
+  .need b { font-weight: 600; }
+
+  .scroll { overflow-x: auto; margin: 0 0 1.2rem; border-radius: 10px; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: .94rem; background: var(--surface); }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font: 600 .7rem/1.3 "JetBrains Mono", monospace; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--soft); background: var(--sunken);
+  }
+  thead th.no { color: var(--hot); }
+  tbody tr:last-child td { border-bottom: 0; }
+
+  pre.mermaid {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 22px 16px; text-align: center; overflow-x: auto; box-shadow: var(--shadow);
+  }
+  figure { margin: 26px 0; }
+  figcaption { font-size: .85rem; color: var(--soft); margin-top: 10px; text-align: center; max-width: none; }
+
+  .help { list-style: none; padding: 0; margin: 18px 0; }
+  .help li { padding: 9px 0; border-bottom: 1px solid var(--line); max-width: none; }
+  .help li:last-child { border-bottom: 0; }
+  .help code { font-size: .83em; }
+
+  hr { border: 0; border-top: 1px solid var(--line); margin: 52px 0; }
+  footer { margin-top: 58px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--soft); font-size: .9rem; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Pippa Hackathon</div>
+  <h1>Build an app for Pippa</h1>
+  <p class="standfirst">You have about two hours. At the end of it, a program
+  you built will be running inside a real assistant, answering real questions.</p>
+  <span class="nocode">No Python to install. No code to write yourself.</span>
+</header>
+
+<h2>What you're building</h2>
+
+<p><strong>Pippa</strong> is a personal assistant. When someone asks it
+something, Pippa decides whether one of its installed <strong>apps</strong> can
+answer.</p>
+
+<p>An app is a small program that does <strong>one job</strong>. Pippa pulls
+the useful bits out of the question, hands them to your app, and your app
+returns facts. Pippa writes the sentence around them.</p>
+
+<figure>
+<pre class="mermaid">
+flowchart LR
+    Q["<b>'when's high tide<br/>at Brighton?'</b>"] --> P{"Pippa:<br/>can an app<br/>answer this?"}
+    F["<b>'@Tide Times when's<br/>high tide at Brighton?'</b>"] -.->|"you picked it"| X
+    P -->|"yours matches"| X["place = 'Brighton'"]
+    X --> A["<b>your app</b><br/>runs"]
+    A --> D["returns facts:<br/>14:32, 6.1m"]
+    D --> R["Pippa replies,<br/>with your app's<br/>name on it"]
+    style A fill:#d9efea,stroke:#0c7a68,stroke-width:2px,color:#0d1e1b
+</pre>
+<figcaption>Your app never talks to the user. Inputs in, facts out. Start a
+message with <b>@</b> and pick your app, and Pippa skips the choosing.</figcaption>
+</figure>
+
+<h2>What you need</h2>
+<ul class="need">
+  <li><b>Claude Code</b>, installed and signed in.</li>
+  <li><b>A GitHub account you can push from.</b> You'll have had an invitation
+      to your repository — accept it.</li>
+  <li><b>A Pippa account</b>, from your Pippa invitation email, and an
+      <b>authenticator app</b> on your phone. Set this up first — see step 4.
+      The address it arrives at goes in your app's <code>manifest.yaml</code>;
+      that is what makes the app yours.</li>
+</ul>
+<p>That's the lot. Claude Code does the rest.</p>
+
+<ol class="steps">
+
+<li class="step" data-n="1">
+  <span class="when">The only thing you have to do</span>
+  <h2>Point Claude Code at your repo</h2>
+  <p>Open Claude Code and paste your repository link together with what you
+  want built:</p>
+  <div class="ask">
+    <span class="who">You</span>
+    <span class="lnk">https://github.com/Pippa-Labs/pippa-hack-<strong>yourname</strong></span>
+    <p style="margin:.6rem 0 0"><em>Here's my repo for a Pippa app. Please clone
+    it and build me an app that tells me when the next high tide is at a UK
+    beach.</em></p>
+  </div>
+  <p>Claude clones it, reads the instructions that ship inside, and starts
+  building. It already knows the rules, the contract and the usual mistakes.</p>
+  <p>Keep going in plain language: <em>"add low tide too"</em>, <em>"make the
+  error friendlier when the beach isn't found"</em>.</p>
+  <div class="box">
+    <span class="tag">No idea what to build?</span>
+    <p>Ask Claude: <em>"what could I build here?"</em> — or open
+    <code>docs/IDEAS.md</code> in your repo, which has a couple of dozen, most with a
+    free public API that needs no sign-up.</p>
+  </div>
+</li>
+
+<li class="step" data-n="2">
+  <span class="when">Claude does this</span>
+  <h2>It gets pushed</h2>
+  <p>When the app is ready, Claude commits and pushes it. <strong>That push is
+  the deploy</strong> — there is nothing else to run.</p>
+  <p>If anything is wrong, the build stops and says exactly what. Tell Claude;
+  it will read the log, fix it and push again.</p>
+</li>
+
+<li class="step" data-n="3">
+  <span class="when">About 2 minutes</span>
+  <h2>You get told it's published</h2>
+  <p>You get <strong>an email</strong> — a comment on your commit — confirming
+  your app published, with its name and what it can do. There's a green tick in
+  the <strong>Actions</strong> tab of your repo too, if you'd rather watch.</p>
+  <div class="box">
+    <span class="tag">Published to you, not to everybody</span>
+    <p>A new app is <strong>private</strong> until a reviewer approves it. You
+    can install it and use it straight away; nobody else can see that it
+    exists. Step 5 is how it becomes public.</p>
+    <p>That's why <code>manifest.yaml</code> has your email address in it —
+    <code>owner_email</code>, the address you sign in to Pippa with. It is the
+    only thing that says the app is yours. Get it wrong and the app publishes
+    happily and then <em>you</em> can't see it either, with nothing anywhere
+    reporting an error.</p>
+    <p>Know this before you push it: in a public repository anyone can read
+    that address in <code>manifest.yaml</code>, and it stays in the git history
+    even if you change it later.</p>
+  </div>
+</li>
+
+<li class="step" data-n="4">
+  <span class="when">The moment</span>
+  <h2>Try it in Pippa</h2>
+  <div class="box hot">
+    <span class="tag">Do this bit early</span>
+    <p>Setting up your Pippa account takes five minutes and needs an
+    <strong>authenticator app</strong> on your phone. Don't leave it until your
+    app is ready.</p>
+  </div>
+  <ol>
+    <li><strong>Create your account</strong> from your Pippa invitation email.
+    The link goes to <strong>console.getpippa.ai</strong>, not the app itself.</li>
+    <li><strong>Set up two-factor.</strong> Not optional. Save the backup codes
+    — they're shown once.</li>
+    <li>Open <a href="https://app.getpippa.ai/apps"><strong>app.getpippa.ai/apps</strong></a>,
+    find your app by name — it's in the list because it's yours — and
+    <strong>install</strong> it.</li>
+    <li>Go to the chat and <strong>just ask it something</strong> — start with
+    one of your own example phrases. Installing it <em>is</em> how you switch
+    it on: from then on, Pippa decides for herself when your app should
+    answer.</li>
+  </ol>
+  <p>When Pippa answers using your app, the reply carries a small green
+  <strong>via &lt;your app name&gt;</strong> badge. That's how you know it was
+  yours. It also says who chose it: <strong>picked by Pippa</strong>, or
+  <strong>you picked it</strong>.</p>
+  <div class="box">
+    <span class="tag">Want to ask your app directly?</span>
+    <p>Start the message with <strong>@</strong> and pick your app from the
+    list. Pippa skips deciding and hands the question straight to your app —
+    the quickest way to check the app itself works. It tells you nothing
+    about whether Pippa would have picked it on her own, though, so ask
+    without the <strong>@</strong> too.</p>
+  </div>
+  <div class="box">
+    <span class="tag">Just published and can't see it?</span>
+    <p>The Apps page loads the list once. Reload the page. Still missing? Check
+    that <code>owner_email</code> in <code>manifest.yaml</code> is the address
+    you're signed in as — a private app you don't own is a private app you
+    can't see.</p>
+  </div>
+</li>
+
+<li class="step" data-n="5">
+  <span class="when">When you're happy with it</span>
+  <h2>Show it to someone, then submit it</h2>
+  <p><strong>Show it to someone first.</strong> On your app's page in Pippa you
+  can add a <strong>tester</strong> by email address, and they can install and
+  use your app while it's still private. The person next to you asking it
+  something you never thought of is the most useful ten minutes you'll spend on
+  it.</p>
+  <p><strong>Then submit it.</strong> Press <strong>Submit for review</strong>
+  on that same page. A reviewer reads your manifest — the name, the summary,
+  what the app can do, the phrases that trigger it — and either approves it,
+  which makes it public to everybody, or sends it back with a reason you can
+  read.</p>
+  <figure>
+<pre class="mermaid">
+stateDiagram-v2
+    [*] --> draft: you push to main
+    draft --> pending: you press "Submit for review"
+    pending --> approved: a reviewer says yes
+    pending --> rejected: a reviewer says no, with a reason
+    rejected --> pending: you fix it and submit again
+</pre>
+  <figcaption>Only <b>approved</b> is public. Everything else is you, your
+  testers and the reviewers.</figcaption>
+  </figure>
+  <p>Rejected isn't a verdict on you; it's a list of changes. Fix them, push,
+  submit again. You can keep pushing while you wait — it stays in the queue.</p>
+  <p>There's no command for any of this and nothing for Claude to run:
+  submitting is a button because it's you saying "this one's ready", which is a
+  different thing from a push.</p>
+  <div class="box">
+    <span class="tag">Changing an app that's already approved</span>
+    <p>Bump the version number in <code>manifest.yaml</code> and push. The new
+    version is private to you again; the approved one keeps working for
+    everyone until the new one is approved in turn.
+    <code>docs/REVIEW_AND_SHARING.md</code> has the detail.</p>
+  </div>
+</li>
+
+</ol>
+
+<hr>
+
+<h2>The one thing that decides whether this works</h2>
+
+<div class="box hot">
+  <span class="tag">Read this before you pick an idea</span>
+  <p><strong>Build something that answers with a fact or a figure.</strong></p>
+  <p>Pippa only reaches for an app when the question needs something looked up
+  or worked out. Apps that mainly rewrite or generate text tend to sit unused,
+  because Pippa answers those herself before any app is consulted. It isn't a
+  bug in your app — it simply never gets asked.</p>
+</div>
+
+<div class="scroll">
+<table>
+  <thead><tr><th>Gets used</th><th class="no">Usually doesn't</th></tr></thead>
+  <tbody>
+    <tr><td>calculations and conversions</td><td>translating</td></tr>
+    <tr><td>live lookups — weather, tides, transport, prices</td><td>summarising, rewriting</td></tr>
+    <tr><td>anything about a named place</td><td>writing poems, names, copy</td></tr>
+    <tr><td>anything about a date or a time</td><td>definitions, acronyms</td></tr>
+    <tr><td>working out numbers someone gives you</td><td>explaining how things work</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>The second thing that matters is the <strong>example phrases</strong> in
+your <code>manifest.yaml</code> — they're how Pippa recognises your app. Claude
+writes them, but if your app isn't being picked, that's almost always why. Ask
+Claude to add more, written the way a person would actually type.</p>
+
+<h2>If something goes wrong</h2>
+<ul class="help">
+  <li><strong>Tell Claude.</strong> It can read the build log and fix it —
+  the fastest path for nearly everything.</li>
+  <li><code>docs/TROUBLESHOOTING.md</code> — the errors you're most likely to hit.</li>
+  <li><code>docs/IDEAS.md</code> — app ideas with APIs that need no key.</li>
+  <li><code>docs/REVIEW_AND_SHARING.md</code> — who can see your app before
+  it's approved, how to let a friend try it, and how to submit it.</li>
+  <li><strong>Ask an organiser.</strong> Bring your repo name, what you asked
+  Pippa, and what it said.</li>
+</ul>
+
+<div class="box">
+  <span class="tag">A tip worth taking</span>
+  <p><strong>Get something deployed in the first twenty minutes</strong>,
+  before the app is finished. Ask Claude to set the app id, give it a name, and
+  push the example app as it is. Watch it go live, install it, ask it a
+  question. Then you know the whole pipeline works — so when something breaks
+  later, you know it's your app and not the plumbing.</p>
+  <p>Nothing is on show while you do it: a published app is private to you
+  until it's reviewed, so an unfinished one going out costs you nothing.</p>
+</div>
+
+<footer>
+  <p>Everything on this page is also in your repository's
+  <code>README.md</code>, which is the copy that stays up to date.
+  Build something you'd actually use.</p>
+</footer>
+
+</div>
+
+<script type="module">
+  // Loaded explicitly because this file is meant to be opened from disk,
+  // emailed, or put on a projector — none of which render Mermaid for us.
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+  const dark = () => {
+    const stamped = document.documentElement.getAttribute("data-theme");
+    if (stamped) return stamped === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+
+  const palette = (isDark) => isDark
+    ? { primaryColor: "#10302a", primaryTextColor: "#e4efec",
+        primaryBorderColor: "#45d6bb", lineColor: "#8fa9a4",
+        secondaryColor: "#111f1c", tertiaryColor: "#0d1917",
+        background: "#0a1412", mainBkg: "#111f1c",
+        nodeBorder: "#1e332f", clusterBkg: "#0d1917",
+        clusterBorder: "#1e332f", textColor: "#e4efec" }
+    : { primaryColor: "#d9efea", primaryTextColor: "#0d1e1b",
+        primaryBorderColor: "#0c7a68", lineColor: "#4d6763",
+        secondaryColor: "#ffffff", tertiaryColor: "#e6edeb",
+        background: "#ffffff", mainBkg: "#ffffff",
+        nodeBorder: "#d3e0dc", clusterBkg: "#f1f5f4",
+        clusterBorder: "#d3e0dc", textColor: "#0d1e1b" };
+
+  // Keep each diagram's source: rendering replaces the element's contents, so
+  // without this a theme change would have nothing left to draw from.
+  // innerHTML, not textContent: the labels contain <b> and <br/>, which the
+  // browser has already parsed into elements, and textContent drops them —
+  // "Pippa:<br/>can an app" was drawn as "Pippa:can an app". innerHTML is
+  // what Mermaid itself reads.
+  document.querySelectorAll("pre.mermaid").forEach((el) => {
+    el.dataset.source = el.innerHTML;
+  });
+
+  const draw = async () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "base",
+      themeVariables: palette(dark()),
+      fontFamily: '"Public Sans", system-ui, sans-serif',
+      flowchart: { htmlLabels: true, curve: "basis" },
+      securityLevel: "loose",
+    });
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.source;
+    });
+    await mermaid.run({ querySelector: "pre.mermaid" });
+  };
+
+  draw();
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+</script>
+</body>
+</html>
