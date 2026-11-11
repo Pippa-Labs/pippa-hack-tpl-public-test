@@ -56,7 +56,7 @@ app:
   #
   # Hyphens are not valid in an app id anywhere. `git remote get-url origin`
   # tells you the repository name.
-  id: hack.your_app_name_here
+  id: hack.tpl_public_test
   name: Days Until
   version: 0.1.0
   publisher: Your name
